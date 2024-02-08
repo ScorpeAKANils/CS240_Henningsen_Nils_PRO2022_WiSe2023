@@ -36,12 +36,28 @@ public class MathTest
 
     public static Matrix4x4 MatrixMultiplikation(Matrix4x4 A, Matrix4x4 B)
     {
-        return A * B;
+        Matrix4x4 result = Matrix4x4.zero; 
+        for(int i = 0; i <= 3; i++) 
+        {
+            for(int j = 0; j <= 3; j++) 
+            {
+                float sum = 0; 
+                for(int k = 0; k <= 3; k++) 
+                {
+                    sum += A[i, k] * B[k, j]; 
+                }
+                result[i, j] = sum;
+            }
+        }
+        return result;
     }
 
     // This function assumes an orthogonal Matrix A
     public static Matrix4x4 OrthogonalMatrixInverse(Matrix4x4 A)
     {
+        //Schritt 1: Determinante bestimmen
+        //Schritt 2: ....
+        //Schritt 3: Profit 
         return A.inverse;
     }
 
