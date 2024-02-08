@@ -39,12 +39,43 @@ public class matrixinversetest : MonoBehaviour
         Matrix4x4 inversedMyFunctionOne = MathTest.OrthogonalMatrixInverse(testOne); 
         if(inversedMyFunctionOne == testOne.inverse) 
         {
-            Debug.Log("bestanden!"); 
+            Debug.Log("Test 1: bestanden!"); 
         } else 
         {
-            Debug.Log("f!");
+            Debug.Log("Test 1: f!");
         }
-            
+
+
+        Matrix4x4 inversedMyFunctionTwo = MathTest.OrthogonalMatrixInverse(testTwo);
+        if (inversedMyFunctionTwo == testTwo.inverse)
+        {
+            Debug.Log("Test 2: bestanden!");
+        }
+        else
+        {
+            Debug.Log("Test 2: f!");
+        }
+
+        Matrix4x4 inversedMyFunctionThree = MathTest.OrthogonalMatrixInverse(testThree);
+        if (inversedMyFunctionThree == testThree.inverse)
+        {
+            Debug.Log("Test 3 bestanden!");
+        }
+        else
+        {
+            Debug.Log("Test 3: f!");
+        }
+
+        Matrix4x4 inversedMyFunctionFour = MathTest.OrthogonalMatrixInverse(testFour);
+        if (inversedMyFunctionFour == testFour.inverse)
+        {
+            Debug.Log("Test 4: bestanden!");
+        }
+        else
+        {
+            Debug.Log("Test 4: f!");
+        }
+
     }
 
     // Update is called once per frame

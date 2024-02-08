@@ -53,8 +53,7 @@ public class MathTest
 
     public static Matrix4x4 OrthogonalMatrixInverse(Matrix4x4 A)
     {
-        Matrix4x4 reversedA = GaußVerfahren(A);
-        return reversedA;
+        return GaußVerfahren(A);
     }
 
     private static Matrix4x4 GaußVerfahren(Matrix4x4 A)
