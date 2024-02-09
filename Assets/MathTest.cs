@@ -160,10 +160,30 @@ public class MathTest
     {
         return direction - 2 * DotProduct(direction, surfaceNormal) * surfaceNormal;
     }
-    
     public static bool IsInsideCone(Vector2 pos, Vector2 coneOrigin, Vector2 viewDirection, float coneRadius, float coneHalfAngleDegree)
     {
-        throw new NotImplementedException();
+        Vector2 distanceV = pos - coneOrigin;
+        float dist = VectorLength(distanceV); // Berechne die Länge des Differenzvektors
+
+        if (dist <= coneRadius)
+        {
+            Vector2 normalizedDistance = NormalizeVector(distanceV);
+            Vector2 normalizedViewDirection = NormalizeVector(viewDirection);
+            float dotProduct = DotProduct(normalizedDistance, normalizedViewDirection);
+            float angleRad = Mathf.Acos(dotProduct);
+            float angleDegree = angleRad * Mathf.Rad2Deg;
+
+            if (angleDegree <= coneHalfAngleDegree)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        return false;
     }
 
     public static Vector3 MapPlayerMovementToWorldDirection(float _forwardPlayerInput, float _rightPlayerInput, Vector3 _cameraForward, Vector3 _cameraRight, Vector3 playerPosition, Vector3 planetOrigin)
