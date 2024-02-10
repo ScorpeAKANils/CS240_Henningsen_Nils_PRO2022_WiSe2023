@@ -187,15 +187,17 @@ public class MathTest
     }
     public static Matrix4x4 MatrixPointMultiplikation(Matrix4x4 A, Vector3 p)
     {
-        Matrix4x4 result = Matrix4x4.identity;
+        Matrix4x4 result = identityMatrix();
 
-        result.m00 = A.m00 * p.x + A.m01 * p.y + A.m02 * p.z + A.m03;
-        result.m01 = A.m10 * p.x + A.m11 * p.y + A.m12 * p.z + A.m13;
-        result.m02 = A.m20 * p.x + A.m21 * p.y + A.m22 * p.z + A.m23;
-        result.m03 = A.m30 * p.x + A.m31 * p.y + A.m32 * p.z + A.m33;
+        result[0, 0] = A[0, 0] * p.x + A[0, 1] * p.y + A[0, 2] * p.z + A[0, 3];
+        result[1, 0] = A[1, 0] * p.x + A[1, 1] * p.y + A[1, 2] * p.z + A[1, 3];
+        result[2, 0] = A[2, 0] * p.x + A[2, 1] * p.y + A[2, 2] * p.z + A[2, 3];
+        result[3, 0] = A[3, 0] * p.x + A[3, 1] * p.y + A[3, 2] * p.z + A[3, 3];
 
         return result;
     }
+
+
     public static Vector3 MapPlayerMovementToWorldDirection(float _forwardPlayerInput, float _rightPlayerInput, Vector3 _cameraForward, Vector3 _cameraRight, Vector3 playerPosition, Vector3 planetOrigin)
     {
         Vector3 localMovementDirection = _rightPlayerInput * _cameraRight + _forwardPlayerInput * CrossProduct(_cameraRight, Vector3.up);
@@ -213,26 +215,35 @@ public class MathTest
 
     public static Matrix4x4 MapWorldToMap(Matrix4x4 playerLocalToWorld, Matrix4x4 enemyLocalToWorld, Matrix4x4 mapLocalToWorld, float mapScaling)
     {
-        Matrix4x4 playerPosOnMap = MathTest.MatrixMultiplikation(playerLocalToWorld, mapLocalToWorld);
-        Matrix4x4 enemyPosOnMap = MathTest.MatrixMultiplikation(enemyLocalToWorld, mapLocalToWorld);
+        // Transformieren der Spielerposition in Weltkoordinaten in Koordinaten auf der Mini-Map und Anpassen der Skalierung
+        Vector3 playerPosOnMap = MapPointToMap(playerLocalToWorld.GetColumn(3), mapLocalToWorld, mapScaling);
 
-        Vector3 VmapScaling = new Vector3(mapScaling, mapScaling, mapScaling); 
-        Matrix4x4 projectPlayerPosOnMap = MathTest.MatrixPointMultiplikation(playerPosOnMap, VmapScaling);
-        Matrix4x4 projectEnemyPosOnMap = MathTest.MatrixPointMultiplikation(enemyPosOnMap, VmapScaling);
+        // Transformieren der Feindposition in Weltkoordinaten in Koordinaten auf der Mini-Map und Anpassen der Skalierung
+        Vector3 enemyPosOnMap = MapPointToMap(enemyLocalToWorld.GetColumn(3), mapLocalToWorld, mapScaling);
 
-        Vector3 player = MathTest.GetACol(3, playerPosOnMap);
-        Vector3 enemy = MathTest.GetACol(3, enemyPosOnMap);
+        // Erstellen einer Transformationsmatrix mit den angepassten Skalierungswerten
+        Matrix4x4 transformMatrix = Matrix4x4.identity;
 
-        Matrix4x4 transformMatrix = MathTest.identityMatrix();
+        // Setzen der Spieler- und Feindpositionen in die Transformationsmatrix
+        SetACol(transformMatrix, new float[] { playerPosOnMap.x, playerPosOnMap.y, playerPosOnMap.z, 1 }, 3);
+        SetACol(transformMatrix, new float[] { enemyPosOnMap.x, enemyPosOnMap.y, enemyPosOnMap.z, 1 }, 2);
 
-        float[] values = new float[4] { player.x, player.y, enemy.z, 1 }; 
-        transformMatrix = MathTest.SetACol(transformMatrix, values, 3);
-        transformMatrix[0, 0] = VmapScaling.x;
-        transformMatrix[1, 1] = VmapScaling.y;
-        transformMatrix[2, 2] = VmapScaling.z;
+        // Setzen der Skalierung in die Transformationsmatrix
+        transformMatrix[0, 0] = mapScaling;
+        transformMatrix[1, 1] = mapScaling;
+        transformMatrix[2, 2] = mapScaling;
 
         return transformMatrix;
     }
+
+
+    public static Vector3 MapPointToMap(Vector3 point, Matrix4x4 mapLocalToWorld, float mapScaling)
+    {
+        Vector3 scaledPoint = point * mapScaling;
+        return mapLocalToWorld.MultiplyPoint(scaledPoint);
+    }
+
+
 
     public static Vector3 GetACol(int col, Matrix4x4 A) 
     {
@@ -270,7 +281,7 @@ public class MathTest
 
         Vector3D distanceToOrigin = Vector3D.Subtract(point, planeOrigin);
 
-        float distance = Vector3D.DotProduct(distanceToOrigin, planeNormal);
+        float distance = Vector3D.Magnitude(distanceToOrigin); 
         Vector3D verschiebungsVector = Vector3D.VectorMulSkalar(planeNormal, distance);
 
         projectedVector = Vector3D.Subtract(point, verschiebungsVector);
@@ -373,6 +384,10 @@ public struct Vector3D
         return result;
     }
 
+    public static float Magnitude(Vector3D a) 
+    {
+        return MathF.Sqrt(MathF.Pow(a.x, 2) + MathF.Pow(a.y, 2) + MathF.Pow(a.z, 2));
+    }
     public static Vector3D Addition(Vector3 a, Vector3 b)
     {
         Vector3D result = new Vector3D(0, 0, 0);
@@ -417,7 +432,7 @@ public struct Vector3D
 
     public static Vector3D ConvertToVector3D(Vector3 VectorToConvert)
     {
-        return new Vector3D(VectorToConvert.x, VectorToConvert.y, VectorToConvert.z);
+        return new Vector3D(VectorToConvert);
     }
 }
 //nach nem semester in Unreal muss ich sagen, die entwicklung von C# ist ein segen, in C++ hätte ich nichtmal bock gehabt anzufangen lol 
