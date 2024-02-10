@@ -188,18 +188,38 @@ public class MathTest
 
     public static Vector3 MapPlayerMovementToWorldDirection(float _forwardPlayerInput, float _rightPlayerInput, Vector3 _cameraForward, Vector3 _cameraRight, Vector3 playerPosition, Vector3 planetOrigin)
     {
-        throw new NotImplementedException();
+        Vector3 localMovementDirection = _rightPlayerInput * _cameraRight + _forwardPlayerInput * CrossProduct(_cameraRight, Vector3.up);
+        localMovementDirection = NormalizeVector(localMovementDirection); 
+
+        Vector3 playerOnSphere = playerPosition - planetOrigin;
+        playerOnSphere = NormalizeVector(playerOnSphere);
+
+        Vector3 projectedLocalMovementDirection = Vector3.ProjectOnPlane(localMovementDirection, playerOnSphere);
+        projectedLocalMovementDirection = NormalizeVector(projectedLocalMovementDirection); 
+
+        Vector3 worldMovementDirection = Quaternion.FromToRotation(Vector3.up, playerOnSphere) * projectedLocalMovementDirection;
+        return worldMovementDirection;
     }
 
     public static Matrix4x4 MapWorldToMap(Matrix4x4 playerLocalToWorld, Matrix4x4 enemyLocalToWorld, Matrix4x4 mapLocalToWorld, float mapScaling)
     {
-        //propably vector Projection 
         throw new NotImplementedException();
     }
 
     public static Vector3 ProjectPointToPlane(Vector3 point, Vector3 planeOrigin, Vector3 planeNormal)
     {
-        throw new NotImplementedException();
+        Vector3D projectedVector = new Vector3D(Vector3.zero);
+
+        Vector3D distanceToOrigin = Vector3D.Subtract(point, planeOrigin);
+
+        float distance = Vector3D.DotProduct(distanceToOrigin, planeNormal);
+        Vector3D verschiebungsVector = Vector3D.VectorMulSkalar(planeNormal, distance);
+
+        projectedVector = Vector3D.Subtract(point, verschiebungsVector);
+
+        return Vector3D.ConvertToVector3(projectedVector); 
+
+       //return projectedVector; 
 
     }
 
@@ -213,7 +233,7 @@ public struct Matrix4x8
     {
         if (initData.GetLength(0) != 4 || initData.GetLength(1) != 8)
         {
-            throw new ArgumentException("Input matrix must be 4x8.");
+            throw new ArgumentException("Input matrix must be 4x8. Erstellt ne 4x8 MAtrix und kriegt es nicht geschissen, eine als Parameter rein zu geben. GG, you played your self");
         }
 
         data = initData;
@@ -225,18 +245,127 @@ public struct Matrix4x8
     {
         if (i > 3 || i < 0 || x > 7 || x < 0)
         {
-            throw new ArgumentException("Indexes where outside bounds, du lellek. Values: " + i + " and " + x);
+            throw new ArgumentException("Indexes where outside bounds, du lellek. Values: " + i + " and " + x + " Wenn die Werte allerdings 6 und 9 sind, dann vergiss das lellek, du macher");
         }
         data[i, x] = value;
     }
 
-    public float GetValue(int i, int y) 
+    public float GetValue(int i, int x) 
     {
-        if (i > 3 || i < 0 || y > 7 || y<0)
+        if (i > 3 || i < 0 || x > 7 || x<0)
         {
-            throw new ArgumentException("Indexes where outside bounds, du lellek. Values: " + i + " and " + y);
+            throw new ArgumentException("Indexes where outside bounds, du lellek. Values: " + i + " and " + x + " Wenn die Werte allerdings 6 und 9 sind, dann vergiss das lellek, du macher");
         }
-        return data[i, y];
+        return data[i, x];
     }
 }
 
+public struct Vector3D
+{
+    //werd mir das ding hier propably copy pasten um zu gucken wie weit ich damit in eigenen projecten kommen würde, deswegen gibts hier drin n haufen stuff
+    public float x;
+    public float y;
+    public float z;
+
+    //constructor for initialition with floats 
+    public Vector3D(float X, float Y, float Z)
+    {
+        x = X;
+        y = Y;
+        z = Z;
+    }
+    //constructor with an Vector3 as init data 
+    public Vector3D(Vector3 vectorToCopy)
+    {
+        x = vectorToCopy.x;
+        y = vectorToCopy.y;
+        z = vectorToCopy.z;
+    }
+
+    //Vector substraction + overloads
+    public static Vector3D Subtract(Vector3D a, Vector3D b)
+    {
+        Vector3D result = new Vector3D(0, 0, 0);
+        result.x = a.x - b.x;
+        result.y = a.y - b.y;
+        result.z = a.z - b.z;
+        return result;
+    }
+
+    public static Vector3D Subtract(Vector3 a, Vector3D b)
+    {
+        Vector3D result = new Vector3D(0, 0, 0);
+        result.x = a.x - b.x;
+        result.y = a.y - b.y;
+        result.z = a.z - b.z;
+        return result;
+    }
+
+    public static Vector3D Subtract(Vector3 a, Vector3 b)
+    {
+        Vector3D result = new Vector3D(0, 0, 0);
+        result.x = a.x - b.x;
+        result.y = a.y - b.y;
+        result.z = a.z - b.z;
+        return result;
+    }
+    //vector additons + overloads
+    public static Vector3D Addition(Vector3D a, Vector3D b) 
+    {
+        Vector3D result = new Vector3D(0, 0, 0);
+        result.x = a.x + b.x;
+        result.y = a.y + b.y;
+        result.z = a.z + b.z;
+        return result;
+    }
+
+    public static Vector3D Addition(Vector3 a, Vector3 b)
+    {
+        Vector3D result = new Vector3D(0, 0, 0);
+        result.x = a.x + b.x;
+        result.y = a.y + b.y;
+        result.z = a.z + b.z;
+        return result;
+    }
+    //dot products + overloads 
+    public static float DotProduct(Vector3D a, Vector3D b)
+    {
+        return (a.x * b.x) + (a.y * b.y) + (a.z * b.z);
+    }
+
+    public static float DotProduct(Vector3D a, Vector3 b)
+    {
+        return (a.x * b.x) + (a.y * b.y) + (a.z * b.z);
+    }
+
+    public static float DotProduct(Vector3 a, Vector3 b)
+    {
+        return (a.x * b.x) + (a.y * b.y) + (a.z * b.z);
+    }
+
+    //multiplikation with an skalar + overloads 
+    public static Vector3D VectorMulSkalar(Vector3D a, float skalar) 
+    {
+        return new Vector3D(a.x * skalar, a.y * skalar, a.z * skalar); 
+    }
+
+
+    public static Vector3D VectorMulSkalar(Vector3 a, float skalar)
+    {
+        return new Vector3D(a.x * skalar, a.y * skalar, a.z * skalar);
+    }
+
+    //Vector Convertions 
+    public static Vector3 ConvertToVector3(Vector3D VectorToConvert) 
+    {
+        return new Vector3(VectorToConvert.x, VectorToConvert.y, VectorToConvert.z); 
+    }
+
+    public static Vector3D ConvertToVector3D(Vector3 VectorToConvert)
+    {
+        return new Vector3D(VectorToConvert.x, VectorToConvert.y, VectorToConvert.z);
+    }
+}
+
+
+//nach nem semester in Unreal muss ich sagen, die entwicklung von C# ist ein segen, in C++ hätte ich nichtmal bock gehabt anzufangen lol 
