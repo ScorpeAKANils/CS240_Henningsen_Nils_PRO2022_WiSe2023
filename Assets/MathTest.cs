@@ -185,7 +185,17 @@ public class MathTest
 
         return false;
     }
+    public static Matrix4x4 MatrixPointMultiplikation(Matrix4x4 A, Vector3 p)
+    {
+        Matrix4x4 result = Matrix4x4.identity;
 
+        result.m00 = A.m00 * p.x + A.m01 * p.y + A.m02 * p.z + A.m03;
+        result.m01 = A.m10 * p.x + A.m11 * p.y + A.m12 * p.z + A.m13;
+        result.m02 = A.m20 * p.x + A.m21 * p.y + A.m22 * p.z + A.m23;
+        result.m03 = A.m30 * p.x + A.m31 * p.y + A.m32 * p.z + A.m33;
+
+        return result;
+    }
     public static Vector3 MapPlayerMovementToWorldDirection(float _forwardPlayerInput, float _rightPlayerInput, Vector3 _cameraForward, Vector3 _cameraRight, Vector3 playerPosition, Vector3 planetOrigin)
     {
         Vector3 localMovementDirection = _rightPlayerInput * _cameraRight + _forwardPlayerInput * CrossProduct(_cameraRight, Vector3.up);
@@ -203,11 +213,59 @@ public class MathTest
 
     public static Matrix4x4 MapWorldToMap(Matrix4x4 playerLocalToWorld, Matrix4x4 enemyLocalToWorld, Matrix4x4 mapLocalToWorld, float mapScaling)
     {
-        throw new NotImplementedException();
+        Matrix4x4 playerPosOnMap = MathTest.MatrixMultiplikation(playerLocalToWorld, mapLocalToWorld);
+        Matrix4x4 enemyPosOnMap = MathTest.MatrixMultiplikation(enemyLocalToWorld, mapLocalToWorld);
+
+        Vector3 VmapScaling = new Vector3(mapScaling, mapScaling, mapScaling); 
+        Matrix4x4 projectPlayerPosOnMap = MathTest.MatrixPointMultiplikation(playerPosOnMap, VmapScaling);
+        Matrix4x4 projectEnemyPosOnMap = MathTest.MatrixPointMultiplikation(enemyPosOnMap, VmapScaling);
+
+        Vector3 player = MathTest.GetACol(3, playerPosOnMap);
+        Vector3 enemy = MathTest.GetACol(3, enemyPosOnMap);
+
+        Matrix4x4 transformMatrix = MathTest.identityMatrix();
+
+        float[] values = new float[4] { player.x, player.y, enemy.z, 1 }; 
+        transformMatrix = MathTest.SetACol(transformMatrix, values, 3);
+        transformMatrix[0, 0] = VmapScaling.x;
+        transformMatrix[1, 1] = VmapScaling.y;
+        transformMatrix[2, 2] = VmapScaling.z;
+
+        return transformMatrix;
+    }
+
+    public static Vector3 GetACol(int col, Matrix4x4 A) 
+    {
+        return new Vector3(A[0, col], A[1, col], A[2, col]); 
+    }
+
+    public static Matrix4x4 SetACol(Matrix4x4 A, float[] values, int col) 
+    {
+        int index = 0; 
+        foreach(float val in values) 
+        {
+            A[index, col] = val;
+            index++; 
+        }
+        return A; 
+    }
+
+    public static Matrix4x4 identityMatrix()
+    {
+        Matrix4x4 identity = new Matrix4x4();
+        for (int i = 0; i < 4; i++)
+        {
+            for (int x = 0; x < 4; x++)
+            {
+                identity[i, x] = (i == x) ? 1 : 0;
+            }
+        }
+        return identity;
     }
 
     public static Vector3 ProjectPointToPlane(Vector3 point, Vector3 planeOrigin, Vector3 planeNormal)
     {
+        //ich musste mein eigenes Vector struct erstellen, weil ich lust drauf hatte und einfach 10/10 heftig bin
         Vector3D projectedVector = new Vector3D(Vector3.zero);
 
         Vector3D distanceToOrigin = Vector3D.Subtract(point, planeOrigin);
@@ -217,12 +275,8 @@ public class MathTest
 
         projectedVector = Vector3D.Subtract(point, verschiebungsVector);
 
-        return Vector3D.ConvertToVector3(projectedVector); 
-
-       //return projectedVector; 
-
+        return Vector3D.ConvertToVector3(projectedVector);
     }
-
 }
 
 public struct Matrix4x8
@@ -366,6 +420,4 @@ public struct Vector3D
         return new Vector3D(VectorToConvert.x, VectorToConvert.y, VectorToConvert.z);
     }
 }
-
-
 //nach nem semester in Unreal muss ich sagen, die entwicklung von C# ist ein segen, in C++ hätte ich nichtmal bock gehabt anzufangen lol 
