@@ -212,35 +212,16 @@ public class MathTest
         Vector3 worldMovementDirection = Quaternion.FromToRotation(Vector3.up, playerOnSphere) * projectedLocalMovementDirection;
         return worldMovementDirection;
     }
-
     public static Matrix4x4 MapWorldToMap(Matrix4x4 playerLocalToWorld, Matrix4x4 enemyLocalToWorld, Matrix4x4 mapLocalToWorld, float mapScaling)
     {
-        // Transformieren der Spielerposition in Weltkoordinaten in Koordinaten auf der Mini-Map und Anpassen der Skalierung
-        Vector3 playerPosOnMap = MapPointToMap(playerLocalToWorld.GetColumn(3), mapLocalToWorld, mapScaling);
+        Matrix4x4 toMapMatrix = mapLocalToWorld * Matrix4x4.Scale(Vector3.one * mapScaling) * playerLocalToWorld * enemyLocalToWorld.inverse;
 
-        // Transformieren der Feindposition in Weltkoordinaten in Koordinaten auf der Mini-Map und Anpassen der Skalierung
-        Vector3 enemyPosOnMap = MapPointToMap(enemyLocalToWorld.GetColumn(3), mapLocalToWorld, mapScaling);
-
-        // Erstellen einer Transformationsmatrix mit den angepassten Skalierungswerten
-        Matrix4x4 transformMatrix = Matrix4x4.identity;
-
-        // Setzen der Spieler- und Feindpositionen in die Transformationsmatrix
-        SetACol(transformMatrix, new float[] { playerPosOnMap.x, playerPosOnMap.y, playerPosOnMap.z, 1 }, 3);
-        SetACol(transformMatrix, new float[] { enemyPosOnMap.x, enemyPosOnMap.y, enemyPosOnMap.z, 1 }, 2);
-
-        // Setzen der Skalierung in die Transformationsmatrix
-        transformMatrix[0, 0] = mapScaling;
-        transformMatrix[1, 1] = mapScaling;
-        transformMatrix[2, 2] = mapScaling;
-
-        return transformMatrix;
+        return toMapMatrix;
     }
-
 
     public static Vector3 MapPointToMap(Vector3 point, Matrix4x4 mapLocalToWorld, float mapScaling)
     {
-        Vector3 scaledPoint = point * mapScaling;
-        return mapLocalToWorld.MultiplyPoint(scaledPoint);
+        return mapLocalToWorld.MultiplyPoint(point) * mapScaling;
     }
 
 
@@ -276,18 +257,12 @@ public class MathTest
 
     public static Vector3 ProjectPointToPlane(Vector3 point, Vector3 planeOrigin, Vector3 planeNormal)
     {
-        //ich musste mein eigenes Vector struct erstellen, weil ich lust drauf hatte und einfach 10/10 heftig bin
-        Vector3D projectedVector = new Vector3D(Vector3.zero);
-
-        Vector3D distanceToOrigin = Vector3D.Subtract(point, planeOrigin);
-
-        float distance = Vector3D.Magnitude(distanceToOrigin); 
-        Vector3D verschiebungsVector = Vector3D.VectorMulSkalar(planeNormal, distance);
-
-        projectedVector = Vector3D.Subtract(point, verschiebungsVector);
-
-        return Vector3D.ConvertToVector3(projectedVector);
+        Vector3 toPoint = point - planeOrigin;
+        float distance = Vector3.Distance(toPoint, planeNormal);
+        Vector3 projectedPoint = point - distance * planeNormal;
+        return projectedPoint;
     }
+
 }
 
 public struct Matrix4x8
