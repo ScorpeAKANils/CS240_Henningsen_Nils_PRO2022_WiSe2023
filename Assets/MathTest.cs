@@ -214,7 +214,7 @@ public class MathTest
     }
     public static Matrix4x4 MapWorldToMap(Matrix4x4 playerLocalToWorld, Matrix4x4 enemyLocalToWorld, Matrix4x4 mapLocalToWorld, float mapScaling)
     {
-        Matrix4x4 toMapMatrix = mapLocalToWorld * Matrix4x4.Scale(Vector3.one * mapScaling) * playerLocalToWorld * enemyLocalToWorld.inverse;
+        Matrix4x4 toMapMatrix = mapLocalToWorld * Matrix4x4.Scale(Vector3.one * mapScaling) * OrthogonalMatrixInverse(playerLocalToWorld) * OrthogonalMatrixInverse(enemyLocalToWorld); 
 
         return toMapMatrix;
     }
@@ -258,13 +258,12 @@ public class MathTest
     public static Vector3 ProjectPointToPlane(Vector3 point, Vector3 planeOrigin, Vector3 planeNormal)
     {
         Vector3 toPoint = point - planeOrigin;
-        float distance = Vector3.Distance(toPoint, planeNormal);
+        float distance = DotProduct(toPoint, planeNormal);
         Vector3 projectedPoint = point - distance * planeNormal;
         return projectedPoint;
     }
 
 }
-
 public struct Matrix4x8
 {
     public float[,] data;
@@ -281,7 +280,7 @@ public struct Matrix4x8
 
 
     //zu faul nachzuschlagen wie man den Assignment Operator schreibt 
-    public void AddValues(int i, int x, float value) 
+    public void AddValues(int i, int x, float value)
     {
         if (i > 3 || i < 0 || x > 7 || x < 0)
         {
@@ -290,9 +289,9 @@ public struct Matrix4x8
         data[i, x] = value;
     }
 
-    public float GetValue(int i, int x) 
+    public float GetValue(int i, int x)
     {
-        if (i > 3 || i < 0 || x > 7 || x<0)
+        if (i > 3 || i < 0 || x > 7 || x < 0)
         {
             throw new ArgumentException("Indexes where outside bounds, du lellek. Values: " + i + " and " + x + " Wenn die Werte allerdings 6 und 9 sind, dann vergiss das lellek, du macher");
         }
@@ -300,114 +299,4 @@ public struct Matrix4x8
     }
 }
 
-public struct Vector3D
-{
-    //werd mir das ding hier propably copy pasten um zu gucken wie weit ich damit in eigenen projecten kommen würde, deswegen gibts hier drin n haufen stuff
-    public float x;
-    public float y;
-    public float z;
-
-    //constructor for initialition with floats 
-    public Vector3D(float X, float Y, float Z)
-    {
-        x = X;
-        y = Y;
-        z = Z;
-    }
-    //constructor with an Vector3 as init data 
-    public Vector3D(Vector3 vectorToCopy)
-    {
-        x = vectorToCopy.x;
-        y = vectorToCopy.y;
-        z = vectorToCopy.z;
-    }
-
-    //Vector substraction + overloads
-    public static Vector3D Subtract(Vector3D a, Vector3D b)
-    {
-        Vector3D result = new Vector3D(0, 0, 0);
-        result.x = a.x - b.x;
-        result.y = a.y - b.y;
-        result.z = a.z - b.z;
-        return result;
-    }
-
-    public static Vector3D Subtract(Vector3 a, Vector3D b)
-    {
-        Vector3D result = new Vector3D(0, 0, 0);
-        result.x = a.x - b.x;
-        result.y = a.y - b.y;
-        result.z = a.z - b.z;
-        return result;
-    }
-
-    public static Vector3D Subtract(Vector3 a, Vector3 b)
-    {
-        Vector3D result = new Vector3D(0, 0, 0);
-        result.x = a.x - b.x;
-        result.y = a.y - b.y;
-        result.z = a.z - b.z;
-        return result;
-    }
-    //vector additons + overloads
-    public static Vector3D Addition(Vector3D a, Vector3D b) 
-    {
-        Vector3D result = new Vector3D(0, 0, 0);
-        result.x = a.x + b.x;
-        result.y = a.y + b.y;
-        result.z = a.z + b.z;
-        return result;
-    }
-
-    public static float Magnitude(Vector3D a) 
-    {
-        return MathF.Sqrt(MathF.Pow(a.x, 2) + MathF.Pow(a.y, 2) + MathF.Pow(a.z, 2));
-    }
-    public static Vector3D Addition(Vector3 a, Vector3 b)
-    {
-        Vector3D result = new Vector3D(0, 0, 0);
-        result.x = a.x + b.x;
-        result.y = a.y + b.y;
-        result.z = a.z + b.z;
-        return result;
-    }
-    //dot products + overloads 
-    public static float DotProduct(Vector3D a, Vector3D b)
-    {
-        return (a.x * b.x) + (a.y * b.y) + (a.z * b.z);
-    }
-
-    public static float DotProduct(Vector3D a, Vector3 b)
-    {
-        return (a.x * b.x) + (a.y * b.y) + (a.z * b.z);
-    }
-
-    public static float DotProduct(Vector3 a, Vector3 b)
-    {
-        return (a.x * b.x) + (a.y * b.y) + (a.z * b.z);
-    }
-
-    //multiplikation with an skalar + overloads 
-    public static Vector3D VectorMulSkalar(Vector3D a, float skalar) 
-    {
-        return new Vector3D(a.x * skalar, a.y * skalar, a.z * skalar); 
-    }
-
-
-    public static Vector3D VectorMulSkalar(Vector3 a, float skalar)
-    {
-        return new Vector3D(a.x * skalar, a.y * skalar, a.z * skalar);
-    }
-
-    //Vector Convertions 
-    public static Vector3 ConvertToVector3(Vector3D VectorToConvert) 
-    {
-        return new Vector3(VectorToConvert.x, VectorToConvert.y, VectorToConvert.z); 
-    }
-
-    public static Vector3D ConvertToVector3D(Vector3 VectorToConvert)
-    {
-        return new Vector3D(VectorToConvert);
-    }
-}
 //nach nem semester in Unreal muss ich sagen, die entwicklung von C# ist ein segen, in C++ hätte ich nichtmal bock gehabt anzufangen lol 
