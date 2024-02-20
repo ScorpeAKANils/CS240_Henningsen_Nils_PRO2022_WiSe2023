@@ -53,16 +53,16 @@ public class MathTest
 
     public static Matrix4x4 OrthogonalMatrixInverse(Matrix4x4 A)
     {
-        return GaußVerfahren(A);
+        return Gaussverfahren(A);
     }
 
-    private static Matrix4x4 GaußVerfahren(Matrix4x4 A)
+    private static Matrix4x4 Gaussverfahren(Matrix4x4 A)
     {
         int n = 4;
         float[,] initData = new float[4, 8];
         Matrix4x8 matrix = new Matrix4x8(initData);
 
-        // Einfügen der Werte von A + Einheitsmatrix auf der rechten Seite
+        // Einfï¿½gen der Werte von A + Einheitsmatrix auf der rechten Seite
         for (int i = 0; i < n; i++)
         {
             for (int x = 0; x < 4; x++)
@@ -73,7 +73,7 @@ public class MathTest
             matrix.AddValues(i, i + n, 1);
         }
 
-        // Gauß-Jordan Elimination
+        // Gauï¿½-Jordan Elimination
         for (int i = 0; i < n; i++)
         {
             int pivotRow = i;
@@ -86,7 +86,7 @@ public class MathTest
                 }
             }
 
-            // Falls nötig, swap die Zeilen
+            // Falls nï¿½tig, swap die Zeilen
             if (pivotRow != i)
             {
                 for (int j = 0; j < 2 * n; j++)
@@ -163,7 +163,7 @@ public class MathTest
     public static bool IsInsideCone(Vector2 pos, Vector2 coneOrigin, Vector2 viewDirection, float coneRadius, float coneHalfAngleDegree)
     {
         Vector2 distanceV = pos - coneOrigin;
-        float dist = VectorLength(distanceV); // Berechne die Länge des Differenzvektors
+        float dist = VectorLength(distanceV); // Berechne die Lï¿½nge des Differenzvektors
 
         if (dist <= coneRadius)
         {
@@ -218,13 +218,6 @@ public class MathTest
 
         return toMapMatrix;
     }
-
-    public static Vector3 MapPointToMap(Vector3 point, Matrix4x4 mapLocalToWorld, float mapScaling)
-    {
-        return mapLocalToWorld.MultiplyPoint(point) * mapScaling;
-    }
-
-
 
     public static Vector3 GetACol(int col, Matrix4x4 A) 
     {
@@ -298,5 +291,3 @@ public struct Matrix4x8
         return data[i, x];
     }
 }
-
-//nach nem semester in Unreal muss ich sagen, die entwicklung von C# ist ein segen, in C++ hätte ich nichtmal bock gehabt anzufangen lol 
