@@ -200,32 +200,104 @@ public class MathTest
 
     public static Vector3 MapPlayerMovementToWorldDirection(float _forwardPlayerInput, float _rightPlayerInput, Vector3 _cameraForward, Vector3 _cameraRight, Vector3 playerPosition, Vector3 planetOrigin)
     {
-        Vector3 localMovementDirection = _rightPlayerInput * _cameraRight + _forwardPlayerInput * CrossProduct(_cameraRight, Vector3.up);
-        localMovementDirection = NormalizeVector(localMovementDirection); 
+        Vector3 movementInput = _rightPlayerInput * _cameraRight + _forwardPlayerInput * _cameraForward;
 
-        Vector3 playerOnSphere = playerPosition - planetOrigin;
+        Vector3 playerOnSphere = planetOrigin - playerPosition;
         playerOnSphere = NormalizeVector(playerOnSphere);
 
-        Vector3 projectedLocalMovementDirection = Vector3.ProjectOnPlane(localMovementDirection, playerOnSphere);
-        projectedLocalMovementDirection = NormalizeVector(projectedLocalMovementDirection); 
+        Vector3 projectedMovementInput = movementInput - DotProduct(movementInput, playerOnSphere) * playerOnSphere;
 
-        Vector3 worldMovementDirection = Quaternion.FromToRotation(Vector3.up, playerOnSphere) * projectedLocalMovementDirection;
+        Vector3 dirOrthogonal = CrossProduct(playerOnSphere, _cameraForward);
+        
+        Vector3 worldMovementDirection = projectedMovementInput + dirOrthogonal * DotProduct(dirOrthogonal, movementInput);
         return worldMovementDirection;
     }
+
     public static Matrix4x4 MapWorldToMap(Matrix4x4 playerLocalToWorld, Matrix4x4 enemyLocalToWorld, Matrix4x4 mapLocalToWorld, float mapScaling)
     {
-        Matrix4x4 toMapMatrix = mapLocalToWorld * Matrix4x4.Scale(Vector3.one * mapScaling) * OrthogonalMatrixInverse(playerLocalToWorld) * OrthogonalMatrixInverse(enemyLocalToWorld); 
+        Matrix4x4 pWordPOs = OrthogonalMatrixInverse(playerLocalToWorld);
 
-        return toMapMatrix;
+        Vector3 eWordPOs = MatrixPointMul(pWordPOs, enemyLocalToWorld.GetColumn(3));
+        eWordPOs *= mapScaling;
+
+        Vector3 eMapPos = MatrixPointMul(mapLocalToWorld, eWordPOs);
+        Quaternion rot = mapLocalToWorld.rotation;
+
+        Matrix4x4 tMatrix = identityMatrix();
+
+        float[] translationVals = new float[3] {eMapPos.x, eMapPos.y, eMapPos.z};
+        tMatrix = SetACol(tMatrix, translationVals, 3); 
+        Matrix4x4 sMatrix = identityMatrix();
+
+        sMatrix = CreateScaleMatrix(sMatrix, mapScaling); 
+
+        Matrix4x4 rMatrix = QuaternionToMatrix(rot);
+        Matrix4x4 eMaptoWorld = tMatrix * rMatrix * sMatrix;
+
+        return eMaptoWorld;
     }
 
-    public static Vector3 MapPointToMap(Vector3 point, Matrix4x4 mapLocalToWorld, float mapScaling)
+    public static Vector3 ProjectPointToPlane(Vector3 point, Vector3 planeOrigin, Vector3 planeNormal)
     {
-        return mapLocalToWorld.MultiplyPoint(point) * mapScaling;
+        Vector3 p = point - planeOrigin;
+        float d = DotProduct(p, planeNormal);
+        Vector3 projectedPoint = point - d * planeNormal;
+        return projectedPoint;
+
     }
 
+    public static Matrix4x4 QuaternionToMatrix(Quaternion quaternion)
+    {
+        float x = quaternion.x;
+        float y = quaternion.y;
+        float z = quaternion.z;
+        float w = quaternion.w;
 
+        float xx = x * x;
+        float xy = x * y;
+        float xz = x * z;
+        float xw = x * w;
 
+        float yy = y * y;
+        float yz = y * z;
+        float yw = y * w;
+
+        float zz = z * z;
+        float zw = z * w;
+
+        Matrix4x4 rotationMatrix = new Matrix4x4();
+        rotationMatrix.m00 = 1 - 2 * (yy + zz);
+        rotationMatrix.m01 = 2 * (xy - zw);
+        rotationMatrix.m02 = 2 * (xz + yw);
+        rotationMatrix.m03 = 0;
+
+        rotationMatrix.m10 = 2 * (xy + zw);
+        rotationMatrix.m11 = 1 - 2 * (xx + zz);
+        rotationMatrix.m12 = 2 * (yz - xw);
+        rotationMatrix.m13 = 0;
+
+        rotationMatrix.m20 = 2 * (xz - yw);
+        rotationMatrix.m21 = 2 * (yz + xw);
+        rotationMatrix.m22 = 1 - 2 * (xx + yy);
+        rotationMatrix.m23 = 0;
+
+        rotationMatrix.m30 = 0;
+        rotationMatrix.m31 = 0;
+        rotationMatrix.m32 = 0;
+        rotationMatrix.m33 = 1;
+
+        return rotationMatrix;
+    }
+
+    private static Matrix4x4 CreateScaleMatrix(Matrix4x4 scaleMatrix, float value) 
+    {
+        for(int i = 0; i < 3; i++) 
+        {
+            scaleMatrix[i, i] = value;
+        }
+        return scaleMatrix;
+    }
+    
     public static Vector3 GetACol(int col, Matrix4x4 A) 
     {
         return new Vector3(A[0, col], A[1, col], A[2, col]); 
@@ -242,26 +314,19 @@ public class MathTest
         return A; 
     }
 
-    public static Matrix4x4 identityMatrix()
-    {
-        Matrix4x4 identity = new Matrix4x4();
-        for (int i = 0; i < 4; i++)
-        {
-            for (int x = 0; x < 4; x++)
-            {
-                identity[i, x] = (i == x) ? 1 : 0;
-            }
-        }
-        return identity;
-    }
+   public static Matrix4x4 identityMatrix()
+   {
+       Matrix4x4 identity = new Matrix4x4();
+       for (int i = 0; i < 4; i++)
+       {
+           for (int x = 0; x < 4; x++)
+           {
+               identity[i, x] = (i == x) ? 1 : 0;
+           }
+       }
+       return identity;
+   }
 
-    public static Vector3 ProjectPointToPlane(Vector3 point, Vector3 planeOrigin, Vector3 planeNormal)
-    {
-        Vector3 toPoint = point - planeOrigin;
-        float distance = DotProduct(toPoint, planeNormal);
-        Vector3 projectedPoint = point - distance * planeNormal;
-        return projectedPoint;
-    }
 
 }
 public struct Matrix4x8
